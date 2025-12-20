@@ -1,10 +1,3 @@
-"""
-Test Model - Run inference on palm tree thermal images using test dataset
-
-Usage:
-    python test_model.py  # Tests test dataset using latest checkpoint
-"""
-
 import torch
 import torch.nn as nn
 import argparse
@@ -19,21 +12,13 @@ sys.path.insert(0, str(project_root))
 
 from models.palm_disease_detector import PalmDiseaseDetector
 from data.dataset import get_dataloaders
+from utils.checkpoint import get_latest_checkpoint
 
 
 CLASS_NAMES = ["Healthy", "Sick"]
 
 
 def get_device(device_preference="cuda"):
-    """
-    Get available device (CUDA or CPU)
-
-    Args:
-        device_preference: Preferred device ('cuda' or 'cpu')
-
-    Returns:
-        torch.device object
-    """
     if device_preference == "cuda" and torch.cuda.is_available():
         device = torch.device("cuda")
         print(f"[INFO] Using GPU: {torch.cuda.get_device_name(0)}")
@@ -47,16 +32,6 @@ def get_device(device_preference="cuda"):
 
 
 def load_model(checkpoint_path, device):
-    """
-    Load trained model from checkpoint
-
-    Args:
-        checkpoint_path: Path to checkpoint file
-        device: torch.device object
-
-    Returns:
-        Loaded model and checkpoint info
-    """
     if not os.path.exists(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
@@ -84,18 +59,6 @@ def load_model(checkpoint_path, device):
 
 
 def test_model(model, test_loader, criterion, device):
-    """
-    Test model on test dataset
-
-    Args:
-        model: Trained model
-        test_loader: DataLoader for test dataset
-        criterion: Loss function
-        device: torch.device object
-
-    Returns:
-        tuple: (test_loss, test_accuracy, per_class_stats)
-    """
     model.eval()  # Evaluation mode
 
     running_loss = 0.0
@@ -161,36 +124,6 @@ def test_model(model, test_loader, criterion, device):
     }
 
     return avg_loss, accuracy, per_class_stats
-
-
-def get_latest_checkpoint(checkpoint_dir="checkpoints"):
-    """
-    Get the latest checkpoint file based on modification time
-
-    Args:
-        checkpoint_dir: Directory containing checkpoints
-
-    Returns:
-        Path to latest checkpoint file
-
-    Raises:
-        FileNotFoundError: If checkpoint directory doesn't exist or no checkpoints found
-    """
-    checkpoint_path = Path(checkpoint_dir)
-
-    if not checkpoint_path.exists():
-        raise FileNotFoundError(f"Checkpoint directory not found: {checkpoint_dir}")
-
-    # Find all checkpoint files matching the pattern
-    checkpoints = list(checkpoint_path.glob("best_model_*.pth"))
-
-    if not checkpoints:
-        raise FileNotFoundError(f"No checkpoint files found in {checkpoint_dir}")
-
-    # Sort by modification time (most recent first)
-    latest_checkpoint = max(checkpoints, key=lambda p: p.stat().st_mtime)
-
-    return str(latest_checkpoint)
 
 
 def main():
